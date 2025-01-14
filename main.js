@@ -1,4 +1,4 @@
-const apikey = "...";
+const apikey = PropertiesService.getScriptProperties().getProperty("apikey");
 
 String.prototype.addQuery = function (obj) {
   return (this == "" ? "" : `${this}?`) + Object.entries(obj).flatMap(([k, v]) => Array.isArray(v) ? `${k}=` + v.map(e => `${encodeURIComponent(e)}`) : `${k}=${encodeURIComponent(v)}`).join("&");
