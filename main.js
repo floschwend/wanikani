@@ -20,11 +20,14 @@ function fetchAssignments() {
   var subjectIds = jmespath.search(assignments, "[*].subject_id");
   var subjects = fetchSubjects(subjectIds);
 
-  var spreadSheet = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = spreadSheet.getSheetByName("Kanji");
-  spreadSheet.setActiveSheet(sheet);
+  //fillInKanjis(subjects);
+  //fillInVocab(subjects);
+  fillInRadicals(subjects);
+}
 
-  sheet.clear();
+function fillInKanjis(subjects) {
+
+  var sheet = getAndFocusEmptySheet("Kanji");
   sheet.appendRow(["Kanji", "Meaning", "Reading"]);
 
   for (const subject of subjects.filter(s => s.type == 'kanji')) {
@@ -38,6 +41,76 @@ function fetchAssignments() {
 
     sheet.appendRow(rowData);
   }
+}
+
+function fillInVocab(subjects) {
+
+  var sheet = getAndFocusEmptySheet("Vocabulary");
+  sheet.appendRow(["Kanji", "Meaning", "Reading"]);
+
+  for (const subject of subjects.filter(s => s.type == 'vocabulary')) {
+
+    const character = subject.data.slug;
+    const meaning = jmespath.search(subject.data, 'meanings[?primary==`true`].meaning | [0]')
+    const reading = jmespath.search(subject.data, 'readings[?primary==`true`].reading | [0]')
+
+    const rowData = [character, meaning, reading];
+    Logger.log("Appending row: " + rowData)
+
+    sheet.appendRow(rowData);
+  }
+}
+
+function fillInRadicals(subjects) {
+
+  var sheet = getAndFocusEmptySheet("Radicals");
+  sheet.appendRow(["Name", "Meaning", "Image"]);
+
+  for (const subject of subjects.filter(s => s.type == 'radical')) {
+
+    const name = subject.data.slug;
+    const meaning = jmespath.search(subject.data, 'meanings[?primary==`true`].meaning | [0]')
+
+    var svgCode = UrlFetchApp.fetch(subject.data.character_images[0].url).getContentText(); 
+    var converterUrl = PropertiesService.getScriptProperties().getProperty("converter_url");
+
+    // Make a POST request with a JSON payload. 
+    const data = { svg: svgCode}; 
+    const options = { 
+      method: 'post', 
+      contentType: 'application/json', 
+      payload: JSON.stringify(data), 
+    }; 
+    var pngBytes = UrlFetchApp.fetch(converterUrl, options).getBlob().getBytes();
+
+    const rowData = [name, meaning];
+    Logger.log("Appending row: " + rowData)
+
+    sheet.appendRow(rowData);
+    
+    var blob = Utilities.newBlob(pngBytes, 'image/png');
+    var image = sheet.insertImage(blob, sheet.getLastColumn(), sheet.getLastRow());
+  }
+}
+
+function getSvgCodeFromUrl(svgUrl) {
+  try {
+    var response = UrlFetchApp.fetch(svgUrl);
+    var svgCode = response.getContentText();
+    return svgCode;
+  } catch (error) {
+    Logger.log("Error fetching SVG: " + error);
+    return null; // Or throw the error if you prefer
+  }
+}
+
+function getAndFocusEmptySheet(name) {
+
+   var spreadSheet = SpreadsheetApp.getActiveSpreadsheet();
+   var sheet = spreadSheet.getSheetByName(name);
+   spreadSheet.setActiveSheet(sheet);
+   sheet.clear();
+   return sheet;
 }
 
 function fetchSubjects(ids) {
