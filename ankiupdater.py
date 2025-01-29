@@ -16,6 +16,8 @@ def get_card_info(col, card_id):
     info.due = card.due
     info.due_date = date.today() + timedelta(days=duedays)
     info.note_id = card.note().id
+    info.english = card.note()["English"]
+    info.type = card.note_type()["tmpls"][card.ord]["name"]
     return info
 
 def get_anki_date(col, due):
@@ -24,15 +26,19 @@ def get_anki_date(col, due):
 
 def update_cards(col, card_group):
     days = 0
+    print("--- Note: {english} ({note_id})".format(english = card_group[0].english, note_id = card_group[0].note_id))
     for card in card_group:
-        print(card.note_id)
-        if(days > 0):
+        if(days == 0):
+            print("Keeping [{0}] current due date".format(card.type))
+        else:
             new_due = card.due + days
-            print("Old: {old_date} ({old_due}), new: {new_date} ({new_due})".format(old_date = card.due_date, new_date = get_anki_date(col, new_due), old_due = card.due, new_due = new_due))
+            print("Change [{type}] => Old: {old_date} ({old_due}), new: {new_date} ({new_due})".format(type= card.type, old_date = card.due_date, new_date = get_anki_date(col, new_due), old_due = card.due, new_due = new_due))
             
             ankicard = col.get_card(card.card_id)
             ankicard.due = new_due
+
             col.update_card(ankicard)
+            print("Saved card {card_id}".format(card_id = card.card_id))
             
         days += 1
 
