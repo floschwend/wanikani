@@ -41,7 +41,7 @@ def update_cards(col, card_group):
 
             col.update_card(ankicard)
             print("Saved card {card_id}".format(card_id = card.card_id))
-            
+                    
         days += 1
 
 
@@ -49,8 +49,9 @@ def update_cards(col, card_group):
 col = Collection("{userhome}\\AppData\\Roaming\\Anki2\\User 1\\collection.anki2".format(userhome = Path.home()))
 card_ids = col.find_cards("-is:new -is:suspended")
 cards = [get_card_info(col, v) for v in card_ids]
+sorted_cards = sorted(cards, key=lambda x: (x.note_id, x.due_date))
 
-groups = [(k, list(g)) for k, g in itertools.groupby(cards, lambda x: GroupKey(x.note_id, x.due_date))]
+groups = [(k, list(g)) for k, g in itertools.groupby(sorted_cards, lambda x: GroupKey(x.note_id, x.due_date))]
 
 duplicates = [(k, g) for k, g in groups if len(g) >= 2]
 
