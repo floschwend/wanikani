@@ -2,6 +2,7 @@ from anki.collection import Collection
 from datetime import datetime, timedelta, date
 import itertools
 from collections import namedtuple
+from pathlib import Path
 
 GroupKey = namedtuple("GroupKey", ["note_id", "due_date"])
 
@@ -17,6 +18,7 @@ def get_card_info(col, card_id):
     info.due_date = date.today() + timedelta(days=duedays)
     info.note_id = card.note().id
     info.english = card.note()["English"]
+    info.ivl = card.ivl
     info.type = card.note_type()["tmpls"][card.ord]["name"]
     return info
 
@@ -42,7 +44,9 @@ def update_cards(col, card_group):
             
         days += 1
 
-col = Collection("C:\\Users\\...\\AppData\\Roaming\\Anki2\\User 1\\collection.anki2")
+
+
+col = Collection("{userhome}\\AppData\\Roaming\\Anki2\\User 1\\collection.anki2".format(userhome = Path.home()))
 card_ids = col.find_cards("-is:new -is:suspended")
 cards = [get_card_info(col, v) for v in card_ids]
 
