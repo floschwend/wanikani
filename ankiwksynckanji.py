@@ -29,23 +29,25 @@ def fetchAndParseUrl(url):
     except Exception as inst:
         print("Exception in fetchAndParseUrl: {msg}".format(msg = inst))
     
+def fetchAssignmentsPage(url, a):  
+    data = fetchAndParseUrl(url)
 
-fetchAndParseUrl("https://api.wanikani.com/v2/assignments")
+    assignments = jmespath.search('data[*].data', data)
+
+    print("Found assignments in page: {number}".format(number= len(assignments)))
+
+    next = data["pages"]["next_url"]
+    if a == 1:
+        return assignments
+    #if next is not None:
+    #    assignments = assignments.append(fetchAssignmentsPage(next))
+    assignments = assignments.append(fetchAssignmentsPage(url, 1))
+
+    return assignments
+
+fetchAssignmentsPage("https://api.wanikani.com/v2/assignments", 2)
 
 '''
-def fetchAssignmentsPage(url):  
-    const data = fetchAndParseUrl(url);
-
-    var assignments = jmespath.search(data, 'data[*].data');
-
-    Logger.log("Found assignments in page: " + assignments.length)
-
-    if (data.pages.next_url?.length > 0) {
-        assignments = assignments.concat(fetchAssignmentsPage(data.pages.next_url));
-    }
-
-    return assignments;
-
 
 def fetchAssignments():
 
