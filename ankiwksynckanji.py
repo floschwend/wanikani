@@ -1,8 +1,5 @@
 from anki.collection import Collection
-from datetime import datetime, timedelta, date
-import itertools
 import jmespath
-from collections import namedtuple
 from pathlib import Path
 import requests
 import yaml
@@ -90,26 +87,36 @@ def createMissingNotes(col, subjects, existing_characters):
     note_type = col.models.get(col.models.id_for_name("FloKanjiOnly"))
     did = col.decks.id("Kanji")
 
-    missing_subjects = [v for v in subjects if v["data"]["slug"] not in existing_characters]
-    for subj in missing_subjects:
+    for subj in subjects:
 
-        print("Adding new Kanji: {character}".format(character = subj["data"]["slug"]))
+        kanjichar = subj["data"]["slug"]
 
-        note_new = col.newNote(note_type)
-        note_new["Character"] = subj["data"]["slug"]
+        note = None
+        if kanjichar in existing_characters:
+            exnotesids = col.find_notes("Deck:Kanji Character:{kanjichar}".format(kanjichar=kanjichar))
+            if(len(exnotesids) != 1):
+                raise Exception("More than one note to update found: {kanjichar}".format(kanjichar = kanjichar))
+            note = col.get_note(exnotesids[0])
+            print("Updating Kanji: {character}".format(character = kanjichar))
+        else:
+            note = col.newNote(note_type)
+            note["Character"] = kanjichar
+            col.add_note(note, did)
+            print("Adding new Kanji: {character}".format(character = kanjichar))
+
         #note_new["Radicals"] = subj["data"]["slug"]
         
-        note_new["Meaning"] = next((v["meaning"] for v in subj["data"]["meanings"] if v["primary"] == True), "")
-        note_new["MeaningMnemonic"] = subj["data"]["meaning_mnemonic"] or ""
-        note_new["MeaningHint"] = subj["data"]["meaning_hint"] or ""
-        note_new["Reading"] = next((v["reading"] for v in subj["data"]["readings"] if v["primary"] == True), "")
-        note_new["ReadingMnemonic"] = subj["data"]["reading_mnemonic"] or ""
-        note_new["ReadingHint"] = subj["data"]["reading_hint"] or ""
-        note_new["OtherMeanings"] = ", ".join([v["meaning"] for v in subj["data"]["meanings"] if v["primary"] == False])
-        note_new["OtherReadings"] = ", ".join([v["reading"] for v in subj["data"]["readings"] if v["primary"] == False and v["type"] == "onyomi"])
+        note["Meaning"] = next((v["meaning"] for v in subj["data"]["meanings"] if v["primary"] == True), "")
+        note["MeaningMnemonic"] = subj["data"]["meaning_mnemonic"] or ""
+        note["MeaningHint"] = subj["data"]["meaning_hint"] or ""
+        note["Reading"] = next((v["reading"] for v in subj["data"]["readings"] if v["primary"] == True), "")
+        note["ReadingMnemonic"] = subj["data"]["reading_mnemonic"] or ""
+        note["ReadingHint"] = subj["data"]["reading_hint"] or ""
+        note["OtherMeanings"] = ", ".join([v["meaning"] for v in subj["data"]["meanings"] if v["primary"] == False])
+        note["OtherReadings"] = ", ".join([v["reading"] for v in subj["data"]["readings"] if v["primary"] == False and v["type"] == "onyomi"])
         #note_new["SimilarKanjis"] = subj["data"]["slug"]
 
-        col.add_note(note_new, did)
+        col.update_note(note)
 
 
 # Get Kanjis from WK
