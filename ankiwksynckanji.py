@@ -38,7 +38,7 @@ def fetchAssignmentsPage(url, params):
 def fetchSubjects():
 
     url = "https://api.wanikani.com/v2/assignments"
-    params = {"srs_stages": ','.join(str(i) for i in range(1,10)), "subject_types":"kanji"}
+    params = {"srs_stages": ','.join(str(i) for i in range(1,10)), "subject_types":"kanji,radical"}
 
     assignments = fetchAssignmentsPage(url, params)
 
@@ -70,7 +70,7 @@ def fetchSubjectsDetailsPage(ids):
     params = {"ids":",".join(map(str, ids))}
 
     data = fetchAndParseUrl(url, params)
-    subjects = jmespath.search('data[*].{type: object, data: data}', data)
+    subjects = jmespath.search('data[*].{id: id, type: object, data: data}', data)
 
     print("Found subjects in page: {subjpage}".format(subjpage=len(subjects)))
 
@@ -82,12 +82,12 @@ def getNoteInfo(col, note_id):
     return note["Character"]
 
 
-def createMissingNotes(col, subjects, existing_characters):
+def createMissingKanji(col, kanjis, existing_characters, radicals):
 
     note_type = col.models.by_name("FloKanjiOnly")
     did = col.decks.id("Kanji")
 
-    for subj in subjects:
+    for subj in kanjis:
 
         kanjichar = subj["data"]["slug"]
 
@@ -104,7 +104,9 @@ def createMissingNotes(col, subjects, existing_characters):
             col.add_note(note, did)
             print("Adding new Kanji: {character}".format(character = kanjichar))
 
-        #note_new["Radicals"] = subj["data"]["slug"]
+
+        radicals_kanji = [v["data"]["slug"] for v in radicals if v["id"] in subj["data"]["component_subject_ids"]]
+        note["Radicals"] = ", ".join(radicals_kanji)
         
         note["Meaning"] = next((v["meaning"] for v in subj["data"]["meanings"] if v["primary"] == True), "")
         note["MeaningMnemonic"] = subj["data"]["meaning_mnemonic"] or ""
@@ -114,17 +116,22 @@ def createMissingNotes(col, subjects, existing_characters):
         note["ReadingHint"] = subj["data"]["reading_hint"] or ""
         note["OtherMeanings"] = ", ".join([v["meaning"] for v in subj["data"]["meanings"] if v["primary"] == False])
         note["OtherReadings"] = ", ".join([v["reading"] for v in subj["data"]["readings"] if v["primary"] == False and v["type"] == "onyomi"])
-        #note_new["SimilarKanjis"] = subj["data"]["slug"]
+        
+        
+        similar = [v["data"]["slug"] for v in kanjis if v["id"] in subj["data"]["visually_similar_subject_ids"]]
+        note["SimilarKanjis"] = ", ".join(similar)
 
         col.update_note(note)
 
 
 # Get Kanjis from WK
 subjects = fetchSubjects()
+kanjis = [v for v in subjects if v["type"] == "kanji"]
+radicals = [v for v in subjects if v["type"] == "radical"]
 
 # Open Anki Collection
 col = Collection("{userhome}\\AppData\\Roaming\\Anki2\\User 1\\collection.anki2".format(userhome = Path.home()))
 note_ids = col.find_notes("Deck:Kanji")
 existing_characters = [getNoteInfo(col, v) for v in note_ids]
-createMissingNotes(col, subjects, existing_characters)
+createMissingKanji(col, kanjis, existing_characters, radicals)
 col.close()
