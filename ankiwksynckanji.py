@@ -84,7 +84,7 @@ def getNoteInfo(col, note_id):
 
 def createMissingNotes(col, subjects, existing_characters):
 
-    note_type = col.models.get(col.models.id_for_name("FloKanjiOnly"))
+    note_type = col.models.by_name("FloKanjiOnly")
     did = col.decks.id("Kanji")
 
     for subj in subjects:
@@ -99,7 +99,7 @@ def createMissingNotes(col, subjects, existing_characters):
             note = col.get_note(exnotesids[0])
             print("Updating Kanji: {character}".format(character = kanjichar))
         else:
-            note = col.newNote(note_type)
+            note = col.new_note(note_type)
             note["Character"] = kanjichar
             col.add_note(note, did)
             print("Adding new Kanji: {character}".format(character = kanjichar))
