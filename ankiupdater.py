@@ -1,5 +1,5 @@
 from anki.collection import Collection
-from datetime import datetime, timedelta, date
+from datetime import timedelta, date
 import itertools
 from collections import namedtuple
 from pathlib import Path
