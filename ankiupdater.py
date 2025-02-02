@@ -47,7 +47,7 @@ def update_cards(col, card_group):
 
 
 col = Collection("{userhome}\\AppData\\Roaming\\Anki2\\User 1\\collection.anki2".format(userhome = Path.home()))
-card_ids = col.find_cards("-is:new -is:suspended")
+card_ids = col.find_cards("deck:Duolingo -is:new -is:suspended")
 cards = [get_card_info(col, v) for v in card_ids]
 sorted_cards = sorted(cards, key=lambda x: (x.note_id, x.due_date))
 
@@ -59,3 +59,5 @@ print("{0} duplicates found".format(len(duplicates)))
 
 for key, group in duplicates:
     update_cards(col, group)
+
+col.close()
