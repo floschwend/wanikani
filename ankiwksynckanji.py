@@ -76,10 +76,10 @@ def fetchSubjectsDetailsPage(ids):
 
     return subjects
 
-def getNoteInfo(col, note_id):
+def getNoteInfo(col, note_id, key):
 
     note = col.get_note(note_id)
-    return note["Character"]
+    return note[key]
 
 
 def getPrimaryMeaning(kanji):
@@ -172,7 +172,10 @@ radicals = [v for v in subjects if v["type"] == "radical"]
 # Open Anki Collection
 col = Collection("{userhome}\\AppData\\Roaming\\Anki2\\User 1\\collection.anki2".format(userhome = Path.home()))
 note_ids = col.find_notes("Deck:Kanji")
-existing_characters = [getNoteInfo(col, v) for v in note_ids]
-createMissingKanji(col, kanjis, existing_characters, radicals)
-createMissingRadicals(col, radicals, existing_characters, kanjis)
+
+existing_kanjislugs = [getNoteInfo(col, v, "Character") for v in note_ids]
+createMissingKanji(col, kanjis, existing_kanjislugs, radicals)
+
+existing_radicalnames = [getNoteInfo(col, v, "Name") for v in note_ids]
+createMissingRadicals(col, radicals, existing_radicalnames, kanjis)
 col.close()
