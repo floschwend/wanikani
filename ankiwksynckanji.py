@@ -82,7 +82,7 @@ def getNoteInfo(col, note_id):
     return note["Character"]
 
 
-def getKanjiPrimaryMeaning(kanji):
+def getPrimaryMeaning(kanji):
     return next((v["meaning"] for v in kanji["data"]["meanings"] if v["primary"] == True), "")
 
 def createMissingKanji(col, kanjis, existing_characters, radicals):
@@ -111,7 +111,7 @@ def createMissingKanji(col, kanjis, existing_characters, radicals):
         radicals_kanji = [v["data"]["slug"] for v in radicals if v["id"] in subj["data"]["component_subject_ids"]]
         note["Radicals"] = ", ".join(radicals_kanji)
         
-        note["Meaning"] = getKanjiPrimaryMeaning(subj)
+        note["Meaning"] = getPrimaryMeaning(subj)
         note["MeaningMnemonic"] = subj["data"]["meaning_mnemonic"] or ""
         note["MeaningHint"] = subj["data"]["meaning_hint"] or ""
         note["Reading"] = next((v["reading"] for v in subj["data"]["readings"] if v["primary"] == True), "")
@@ -121,10 +121,47 @@ def createMissingKanji(col, kanjis, existing_characters, radicals):
         note["OtherReadings"] = ", ".join([v["reading"] for v in subj["data"]["readings"] if v["primary"] == False and v["type"] == "onyomi"])
         
         
-        similar = ["{k}: {d}".format(k=v["data"]["slug"], d=getKanjiPrimaryMeaning(v)) for v in kanjis if v["id"] in subj["data"]["visually_similar_subject_ids"]]
+        similar = ["{k}: {d}".format(k=v["data"]["slug"], d=getPrimaryMeaning(v)) for v in kanjis if v["id"] in subj["data"]["visually_similar_subject_ids"]]
         note["SimilarKanjis"] = ", ".join(similar)
 
         col.update_note(note)
+
+
+def createMissingRadicals(col, radicals, existing_characters, kanjis):
+
+    note_type = col.models.by_name("FloRadicalOnly")
+    did = col.decks.id("Radicals")
+
+    for subj in radicals:
+
+        name = subj["data"]["slug"]
+
+        note = None
+        if name in existing_characters:
+            exnotesids = col.find_notes("Deck:Radicals Name:{name}".format(name=name))
+            if(len(exnotesids) != 1):
+                raise Exception("More than one note to update found: {name}".format(name = name))
+            note = col.get_note(exnotesids[0])
+            print("Updating Radical: {name}".format(name = name))
+        else:
+            note = col.new_note(note_type)
+            note["Name"] = name
+            col.add_note(note, did)
+            print("Adding new Radical: {name}".format(name = name))
+
+
+        note["Meaning"] = getPrimaryMeaning(subj)
+        note["MeaningMnemonic"] = subj["data"]["meaning_mnemonic"] or ""
+        
+        usingkanjis = ["{k}: {d}".format(k=v["data"]["slug"], d=getPrimaryMeaning(v)) for v in kanjis if v["id"] in subj["data"]["amalgamation_subject_ids"]]
+        note["Kanjis"] = ", ".join(usingkanjis)
+
+        subjchars = subj["data"]["characters"]
+        if subjchars is not None and len(subjchars) > 0:
+            note["Image"] = subjchars
+
+        col.update_note(note)
+
 
 
 # Get Kanjis from WK
@@ -137,4 +174,5 @@ col = Collection("{userhome}\\AppData\\Roaming\\Anki2\\User 1\\collection.anki2"
 note_ids = col.find_notes("Deck:Kanji")
 existing_characters = [getNoteInfo(col, v) for v in note_ids]
 createMissingKanji(col, kanjis, existing_characters, radicals)
+createMissingRadicals(col, radicals, existing_characters, kanjis)
 col.close()
