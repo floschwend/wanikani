@@ -3,7 +3,7 @@ import jmespath
 from pathlib import Path
 import requests
 import yaml
-
+from pyquery import PyQuery as pq
 
 config = yaml.safe_load(open("config.yaml"))
 
@@ -15,7 +15,7 @@ def fetchAndParseUrl(url, params, return_method):
 
     try:
         resp = requests.get(url=url, params=params, headers=headers)
-        data = resp.json()
+        data = return_method(resp)
 
         return data
 
@@ -23,7 +23,7 @@ def fetchAndParseUrl(url, params, return_method):
         print("Exception in fetchAndParseUrl: {msg}".format(msg = inst))
     
 def fetchAssignmentsPage(url, params):  
-    data = fetchAndParseUrl(url, params)
+    data = fetchAndParseUrl(url, params, lambda p: p.json())
 
     assignments = jmespath.search('data[*].data', data)
 
@@ -69,7 +69,7 @@ def fetchSubjectsDetailsPage(ids):
     url = "https://api.wanikani.com/v2/subjects"
     params = {"ids":",".join(map(str, ids))}
 
-    data = fetchAndParseUrl(url, params)
+    data = fetchAndParseUrl(url, params, lambda p: p.json())
     subjects = jmespath.search('data[*].{id: id, type: object, data: data}', data)
 
     print("Found subjects in page: {subjpage}".format(subjpage=len(subjects)))
@@ -127,17 +127,6 @@ def createMissingKanji(col, kanjis, existing_characters, radicals):
         col.update_note(note)
 
 
-def fetchSvg(url):
-    try:
-        resp = requests.get(url=url)
-        #data = resp.json()
-
-        return resp
-
-    except Exception as inst:
-        print("Exception in fetchSvg: {msg}".format(msg = inst))
-
-
 def createMissingRadicals(col, radicals, existing_characters, kanjis):
 
     note_type = col.models.by_name("FloRadicalOnly")
@@ -171,8 +160,13 @@ def createMissingRadicals(col, radicals, existing_characters, kanjis):
         if subjchars is not None and len(subjchars) > 0:
             note["Image"] = subjchars
         else:
-            url = subj["data"]["character_images"][0]["url"]
-            resp = fetchSvg(url)
+            url = next((v["url"] for v in subj["data"]["character_images"] if v["content_type"] == "image/svg+xml"), "")
+            svgcode = fetchAndParseUrl(url, {}, lambda p: p.text)
+            doc = pq(svgcode)
+            svg = doc[0]
+            svg.attrib["width"] = "20%"
+            svg.attrib["style"] = "background-color:white"
+            note["Image"] = doc.outerHtml()
 
         col.update_note(note)
 
