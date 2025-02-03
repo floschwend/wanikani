@@ -7,7 +7,7 @@ import yaml
 
 config = yaml.safe_load(open("config.yaml"))
 
-def fetchAndParseUrl(url, params):
+def fetchAndParseUrl(url, params, return_method):
 
     print("Fetching: {url}".format(url= url))
     
@@ -127,6 +127,17 @@ def createMissingKanji(col, kanjis, existing_characters, radicals):
         col.update_note(note)
 
 
+def fetchSvg(url):
+    try:
+        resp = requests.get(url=url)
+        #data = resp.json()
+
+        return resp
+
+    except Exception as inst:
+        print("Exception in fetchSvg: {msg}".format(msg = inst))
+
+
 def createMissingRadicals(col, radicals, existing_characters, kanjis):
 
     note_type = col.models.by_name("FloRadicalOnly")
@@ -159,6 +170,9 @@ def createMissingRadicals(col, radicals, existing_characters, kanjis):
         subjchars = subj["data"]["characters"]
         if subjchars is not None and len(subjchars) > 0:
             note["Image"] = subjchars
+        else:
+            url = subj["data"]["character_images"][0]["url"]
+            resp = fetchSvg(url)
 
         col.update_note(note)
 
@@ -171,11 +185,13 @@ radicals = [v for v in subjects if v["type"] == "radical"]
 
 # Open Anki Collection
 col = Collection("{userhome}\\AppData\\Roaming\\Anki2\\User 1\\collection.anki2".format(userhome = Path.home()))
-note_ids = col.find_notes("Deck:Kanji")
 
-existing_kanjislugs = [getNoteInfo(col, v, "Character") for v in note_ids]
+kanji_note_ids = col.find_notes("Deck:Kanji")
+existing_kanjislugs = [getNoteInfo(col, v, "Character") for v in kanji_note_ids]
 createMissingKanji(col, kanjis, existing_kanjislugs, radicals)
 
-existing_radicalnames = [getNoteInfo(col, v, "Name") for v in note_ids]
+radical_note_ids = col.find_notes("Deck:Radicals")
+existing_radicalnames = [getNoteInfo(col, v, "Name") for v in radical_note_ids]
 createMissingRadicals(col, radicals, existing_radicalnames, kanjis)
+
 col.close()
