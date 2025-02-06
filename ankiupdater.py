@@ -20,6 +20,7 @@ def get_card_info(col, card_id):
     info.english = card.note()["English"]
     info.ivl = card.ivl
     info.type = card.note_type()["tmpls"][card.ord]["name"]
+    info.ord = card.ord
     return info
 
 def get_anki_date(col, due):
@@ -49,7 +50,7 @@ def update_cards(col, card_group):
 col = Collection("{userhome}\\AppData\\Roaming\\Anki2\\User 1\\collection.anki2".format(userhome = Path.home()))
 card_ids = col.find_cards("deck:Duolingo -is:new -is:suspended")
 cards = [get_card_info(col, v) for v in card_ids]
-sorted_cards = sorted(cards, key=lambda x: (x.note_id, x.due_date))
+sorted_cards = sorted(cards, key=lambda x: (x.note_id, x.due_date, x.ord))
 
 groups = [(k, list(g)) for k, g in itertools.groupby(sorted_cards, lambda x: GroupKey(x.note_id, x.due_date))]
 
