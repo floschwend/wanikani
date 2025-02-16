@@ -115,6 +115,7 @@ def createMissingKanji(col, kanjis, existing_characters, radicals):
         note["MeaningMnemonic"] = subj["data"]["meaning_mnemonic"] or ""
         note["MeaningHint"] = subj["data"]["meaning_hint"] or ""
         note["Reading"] = next((v["reading"] for v in subj["data"]["readings"] if v["primary"] == True), "")
+        note["ReadingType"] = next((v["type"] for v in subj["data"]["readings"] if v["primary"] == True), "")
         note["ReadingMnemonic"] = subj["data"]["reading_mnemonic"] or ""
         note["ReadingHint"] = subj["data"]["reading_hint"] or ""
         note["OtherMeanings"] = ", ".join([v["meaning"] for v in subj["data"]["meanings"] if v["primary"] == False])

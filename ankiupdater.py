@@ -12,6 +12,8 @@ class CardInfo(object):
 def get_card_info(col, card_id):
     card = col.get_card(card_id)
     duedays = card.due - col.sched.today
+    if(duedays > 1000):
+        duedays = 0
     info = CardInfo()
     info.card_id = card_id
     info.due = card.due
