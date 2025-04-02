@@ -1,3 +1,4 @@
 .vscode/launch.json
 __pycache__/anki.cpython-313.pyc
 config.yaml
+settings.json
