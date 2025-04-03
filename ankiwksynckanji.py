@@ -31,7 +31,8 @@ def fetchAssignmentsPage(url, params):
 
     next = data["pages"]["next_url"]
     if next is not None:
-        assignments = assignments.append(fetchAssignmentsPage(next, {}))    #empty params as the URL already contains them
+        newAssignments = fetchAssignmentsPage(next, {})   #empty params as the URL already contains them
+        assignments.append(newAssignments)    
 
     return assignments
 

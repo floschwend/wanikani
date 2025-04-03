@@ -8,9 +8,6 @@ class CharInfo:
     y: int
     char: str
 
-def get_td(tr, index: int) -> str:
-    return tr.findChildren("td")[index].getText()
-
 def fetch_and_parse_url(url: str):
 
     try:
@@ -18,8 +15,9 @@ def fetch_and_parse_url(url: str):
         soup = BeautifulSoup(resp.content, 'html.parser')
         chars = []
         for tr in soup.table.findChildren("tr")[1:]:
-            x, char, y = int(get_td(tr, 0)), get_td(tr, 1), int(get_td(tr, 2))
-            chars.append(CharInfo(x, y, char))
+            td_elements = tr.find_all("td")
+            x, char, y = (td.get_text(strip=True) for td in td_elements[:3])
+            chars.append(CharInfo(int(x), int(y), char))
 
         max_x = max(c.x for c in chars)
         max_y = max(c.y for c in chars)
