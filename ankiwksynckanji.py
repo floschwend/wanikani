@@ -166,9 +166,10 @@ def createMissingRadicals(col, radicals, existing_characters, kanjis):
             svgcode = fetchAndParseUrl(url, {}, lambda p: p.text)
             doc = pq(svgcode)
             svg = doc[0]
-            svg.attrib["width"] = "20%"
-            svg.attrib["style"] = "background-color:white"
-            note["Image"] = doc.outerHtml()
+            svg.attrib["width"] = "80px"
+            svg.attrib["style"] = "background-color:transparent"
+
+            note["Image"] = doc.outerHtml().replace("#000", "white")
 
         col.update_note(note)
 
