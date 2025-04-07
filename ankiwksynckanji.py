@@ -9,7 +9,7 @@ config = yaml.safe_load(open("config.yaml"))
 
 def fetchAndParseUrl(url, params, return_method):
 
-    print("Fetching: {url}".format(url= url))
+    print("Fetching: {url} with params {params}".format(url= url, params = params))
     
     headers = {"Wanikani-Revision": "20170710", "Authorization": "Bearer {key}".format(key= config['waniKaniKey'])}
 
@@ -32,7 +32,7 @@ def fetchAssignmentsPage(url, params):
     next = data["pages"]["next_url"]
     if next is not None:
         newAssignments = fetchAssignmentsPage(next, {})   #empty params as the URL already contains them
-        assignments.append(newAssignments)    
+        assignments += newAssignments 
 
     return assignments
 
@@ -101,7 +101,7 @@ def createMissingKanji(col, kanjis, existing_characters, radicals):
             if(len(exnotesids) != 1):
                 raise Exception("More than one note to update found: {kanjichar}".format(kanjichar = kanjichar))
             note = col.get_note(exnotesids[0])
-            print("Updating Kanji: {character}".format(character = kanjichar))
+            # print("Updating Kanji: {character}".format(character = kanjichar))
         else:
             note = col.new_note(note_type)
             note["Character"] = kanjichar
@@ -144,7 +144,7 @@ def createMissingRadicals(col, radicals, existing_characters, kanjis):
             if(len(exnotesids) != 1):
                 raise Exception("More than one note to update found: {name}".format(name = name))
             note = col.get_note(exnotesids[0])
-            print("Updating Radical: {name}".format(name = name))
+            # print("Updating Radical: {name}".format(name = name))
         else:
             note = col.new_note(note_type)
             note["Name"] = name
