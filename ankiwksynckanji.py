@@ -181,7 +181,7 @@ kanjis = [v for v in subjects if v["type"] == "kanji"]
 radicals = [v for v in subjects if v["type"] == "radical"]
 
 # Open Anki Collection
-col = Collection("{userhome}\\AppData\\Roaming\\Anki2\\User 1\\collection.anki2".format(userhome = Path.home()))
+col = Collection("{userhome}\\AppData\\Roaming\\Anki2\\Flo\\collection.anki2".format(userhome = Path.home()))
 
 kanji_note_ids = col.find_notes("Deck:Kanji")
 existing_kanjislugs = [getNoteInfo(col, v, "Character") for v in kanji_note_ids]
