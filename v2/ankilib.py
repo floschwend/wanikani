@@ -43,7 +43,8 @@ def createMissingKanji(col, kanjis, existing_characters, radicals):
             print("Adding new Kanji: {character}".format(character = kanjichar))
 
 
-        radicals_kanji = [v["data"]["slug"] for v in radicals if v["id"] in subj["data"]["component_subject_ids"]]
+        radicals_kanji = ["{char} ({desc})".format(char=v["data"]["slug"], desc=getPrimaryMeaning(v)) 
+                          for v in radicals if v["id"] in subj["data"]["component_subject_ids"]]
         note["Radicals"] = ", ".join(radicals_kanji)
         
         note["Meaning"] = getPrimaryMeaning(subj)
