@@ -1,4 +1,5 @@
 .vscode/launch.json
-**/__pycache__/
+ __pycache__/
+ *.pyc
 config.yaml
 settings.json
