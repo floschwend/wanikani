@@ -51,7 +51,7 @@ def update_cards(col, card_group):
 
 
 col = Collection("{userhome}\\AppData\\Roaming\\Anki2\\Flo\\collection.anki2".format(userhome = Path.home()))
-card_ids = col.find_cards("deck:Duolingo is:review prop:ivl>1") # only take the ones which have an interval > 1d
+card_ids = col.find_cards("deck:Vocab is:review prop:ivl>1") # only take the ones which have an interval > 1d
 cards = [get_card_info(col, v) for v in card_ids]
 sorted_cards = sorted(cards, key=lambda x: (x.note_id, x.due_date, x.ord))
 
