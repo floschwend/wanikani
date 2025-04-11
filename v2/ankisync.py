@@ -22,6 +22,8 @@ def syncNilay():
     existing_vocab = [ankilib.getNoteInfo(col, v, "WKID") for v in vocab_note_ids]
     ankilib.createMissingVocab(col, vocab, existing_vocab, kanjis) 
 
+    # TODO: ankilib.fix_duedates(col)
+
     col.close()
 
 
@@ -47,3 +49,4 @@ def syncFlo():
 
 # Sync Flo
 syncNilay()
+syncFlo()
