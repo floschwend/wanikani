@@ -1,7 +1,4 @@
 from anki.collection import Collection
-from datetime import timedelta, date
-import itertools
-from collections import namedtuple
 from pathlib import Path
 from pyquery import PyQuery as pq
 import wksync
@@ -17,7 +14,7 @@ def getPrimaryMeaning(kanji):
 
 def createMissingKanji(col, kanjis, existing_characters, radicals):
 
-    note_type = col.models.by_name("FloKanjiOnly")
+    note_type = col.models.by_name("KanjiOnly")
     did = col.decks.id("Kanji")
 
     for subj in kanjis:
@@ -60,7 +57,7 @@ def createMissingKanji(col, kanjis, existing_characters, radicals):
 
 def createMissingRadicals(col, radicals, existing_characters, kanjis):
 
-    note_type = col.models.by_name("FloRadicalOnly")
+    note_type = col.models.by_name("RadicalOnly")
     did = col.decks.id("Radicals")
 
     for subj in radicals:
@@ -100,4 +97,37 @@ def createMissingRadicals(col, radicals, existing_characters, kanjis):
 
             note["Image"] = doc.outerHtml().replace("#000", "white")
 
+        col.update_note(note)
+
+def createMissingVocab(col, vocab, existing_vocab, kanjis):
+
+    note_type = col.models.by_name("VocabWithKanji")
+    did = col.decks.id("Kanji")
+
+    for subj in vocab:
+
+        word = subj["data"]["characters"]
+
+        note = None
+        if word in existing_vocab:
+            exnotesids = col.find_notes("Deck:Kanji Word:{word}".format(word=word))
+            if(len(exnotesids) != 1):
+                raise Exception("More than one note to update found: {word}".format(word = word))
+            note = col.get_note(exnotesids[0])
+            # print("Updating Vocab: {word}".format(word = word))
+        else:
+            note = col.new_note(note_type)
+            note["Word"] = word
+            col.add_note(note, did)
+            print("Adding new Vocab: {word}".format(word = word))
+
+
+        used_kanji = [v["data"]["slug"] for v in kanjis if v["id"] in subj["data"]["component_subject_ids"]]
+        note["UsedKanji"] = ", ".join(used_kanji)
+        
+        note["Meaning"] = getPrimaryMeaning(subj)
+        note["Reading"] = next((v["reading"] for v in subj["data"]["readings"] if v["primary"] == True), "")
+        note["OtherMeanings"] = ", ".join([v["meaning"] for v in subj["data"]["meanings"] if v["primary"] == False])
+        note["OtherReadings"] = ", ".join([v["reading"] for v in subj["data"]["readings"] if v["primary"] == False])
+        
         col.update_note(note)
