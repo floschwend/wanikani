@@ -2,8 +2,17 @@ from anki.collection import Collection
 from pathlib import Path
 from pyquery import PyQuery as pq
 import wksync
+from anki.collection import Collection
+from datetime import timedelta, date
+import itertools
+from collections import namedtuple
+from pathlib import Path
 
 colpath = "{userhome}\\AppData\\Roaming\\Anki2\\{profile}\\collection.anki2"
+GroupKey = namedtuple("GroupKey", ["note_id", "due_date"])
+
+class CardInfo(object):
+    pass
 
 def open_collection(profile):
     col = Collection(colpath.format(userhome = Path.home(), profile = profile))
@@ -131,3 +140,66 @@ def createMissingVocab(col, vocab, existing_vocab, kanjis):
         note["OtherReadings"] = ", ".join([v["reading"] for v in subj["data"]["readings"] if v["primary"] == False])
         
         col.update_note(note)
+
+def get_card_info(col, card_id):
+    card = col.get_card(card_id)
+    duedays = card.due - col.sched.today
+    if(duedays > 1000):
+        duedays = 0
+    info = CardInfo()
+    info.card_id = card_id
+    info.due = card.due
+    info.due_date = date.today() + timedelta(days=duedays)
+    info.note_id = card.note().id
+    if(any(f["name"] == "English" for f in card.note_type()["flds"])):
+        info.english = card.note()["English"]
+    info.ivl = card.ivl
+    info.type = card.note_type()["tmpls"][card.ord]["name"]
+    info.ord = card.ord
+    return info
+
+def get_anki_date(col, due):
+    duedays = due - col.sched.today
+    return date.today() + timedelta(days=duedays)
+
+def update_cards(col, card_group):
+    days = 0
+    print("--- Note: {english} ({note_id})".format(english = card_group[0].english, note_id = card_group[0].note_id))
+    for card in card_group:
+        if(days == 0):
+            print("Keeping [{0}] current due date".format(card.type))
+        else:
+            new_due = card.due + days
+            print("Change [{type}] => Old: {old_date} ({old_due}), new: {new_date} ({new_due})".format(type= card.type, old_date = card.due_date, new_date = get_anki_date(col, new_due), old_due = card.due, new_due = new_due))
+            
+            ankicard = col.get_card(card.card_id)
+            ankicard.due = new_due
+
+            col.update_card(ankicard)
+            print("Saved card {card_id}".format(card_id = card.card_id))
+                    
+        days += 1
+
+
+def fix_duedates(col):
+    card_ids = col.find_cards("deck:Vocab is:review prop:ivl>1") # only take the ones which have an interval > 1d
+    numdupl = update_duedates(col, card_ids)
+    while numdupl > 0:
+        numdupl = update_duedates(col, card_ids)
+
+def update_duedates(col, card_ids):
+
+    cards = [get_card_info(col, v) for v in card_ids]
+    sorted_cards = sorted(cards, key=lambda x: (x.note_id, x.due_date, x.ord))
+
+    groups = [(k, list(g)) for k, g in itertools.groupby(sorted_cards, lambda x: GroupKey(x.note_id, x.due_date))]
+
+    duplicates = [(k, g) for k, g in groups if len(g) >= 2]
+
+    numdupl = len(duplicates)
+    print("{0} duplicates found".format(numdupl))
+
+    for key, group in duplicates:
+        update_cards(col, group)
+    
+    return numdupl

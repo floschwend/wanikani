@@ -37,6 +37,8 @@ def syncFlo():
     existing_radicalnames = [wksync.getNoteInfo(col, v, "Name") for v in radical_note_ids]
     ankilib.createMissingRadicals(col, radicals, existing_radicalnames, kanjis)
 
+    ankilib.fix_duedates(col)
+
     col.close()
 
 
