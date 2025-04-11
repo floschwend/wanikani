@@ -109,7 +109,7 @@ def createMissingRadicals(col, radicals, existing_characters, kanjis):
 def createMissingVocab(col, vocab, existing_vocab, kanjis):
 
     note_type = col.models.by_name("VocabWithKanji")
-    did = col.decks.id("Kanji")
+    did = col.decks.id("Vocab")
 
     for subj in vocab:
 
