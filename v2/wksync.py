@@ -7,11 +7,11 @@ import yaml
 
 config = yaml.safe_load(open("config.yaml"))
 
-def fetchAndParseUrl(url, params, return_method):
+def fetchAndParseUrl(url, params, return_method, bearer):
 
     print("Fetching: {url} with params {params}".format(url= url, params = params))
     
-    headers = {"Wanikani-Revision": "20170710", "Authorization": "Bearer {key}".format(key= config['waniKaniKeyUser2'])}
+    headers = {"Wanikani-Revision": "20170710", "Authorization": "Bearer {key}".format(key= bearer)}
 
     try:
         resp = requests.get(url=url, params=params, headers=headers)
@@ -22,8 +22,8 @@ def fetchAndParseUrl(url, params, return_method):
     except Exception as inst:
         print("Exception in fetchAndParseUrl: {msg}".format(msg = inst))
     
-def fetchAssignmentsPage(url, params):  
-    data = fetchAndParseUrl(url, params, lambda p: p.json())
+def fetchAssignmentsPage(url, params, bearer):  
+    data = fetchAndParseUrl(url, params, lambda p: p.json(), bearer)
 
     assignments = jmespath.search('data[*].data', data)
 
@@ -31,24 +31,24 @@ def fetchAssignmentsPage(url, params):
 
     next = data["pages"]["next_url"]
     if next is not None:
-        newAssignments = fetchAssignmentsPage(next, {})   #empty params as the URL already contains them
+        newAssignments = fetchAssignmentsPage(next, {}, bearer)   #empty params as the URL already contains them
         assignments += newAssignments 
 
     return assignments
 
-def fetchSubjects(types):
+def fetchSubjects(types, bearer):
 
     url = "https://api.wanikani.com/v2/assignments"
     params = {"srs_stages": ','.join(str(i) for i in range(1,10)), "subject_types":types}
 
-    assignments = fetchAssignmentsPage(url, params)
+    assignments = fetchAssignmentsPage(url, params, bearer)
 
     subjectIds = jmespath.search("[*].subject_id", assignments)
-    subjects = fetchSubjectsDetails(subjectIds)
+    subjects = fetchSubjectsDetails(subjectIds, bearer)
 
     return subjects
 
-def fetchSubjectsDetails(ids):
+def fetchSubjectsDetails(ids, bearer):
 
     subjects = []
 
@@ -57,7 +57,7 @@ def fetchSubjectsDetails(ids):
         inclfrom = i
         exclto = min(i+chunkSize, len(ids))
         subids = list(ids[inclfrom:exclto])
-        subjdata = fetchSubjectsDetailsPage(subids)
+        subjdata = fetchSubjectsDetailsPage(subids, bearer)
         subjects = subjects + subjdata
 
     print("Found total subjects: {subjtotal}".format(subjtotal = len(subjects)))
@@ -65,13 +65,21 @@ def fetchSubjectsDetails(ids):
     return subjects
 
 
-def fetchSubjectsDetailsPage(ids):
+def fetchSubjectsDetailsPage(ids, bearer):
 
     url = "https://api.wanikani.com/v2/subjects"
     params = {"ids":",".join(map(str, ids))}
 
-    data = fetchAndParseUrl(url, params, lambda p: p.json())
+    data = fetchAndParseUrl(url, params, lambda p: p.json(), bearer)
     subjects = jmespath.search('data[*].{id: id, type: object, data: data}', data)
+
+    radicals = [v for v in subjects if v["type"] == "radical"]
+    for radical in radicals:
+        subjchars = radical["data"]["characters"]
+        if subjchars is None or len(subjchars) == 0:
+            url = next((v["url"] for v in radical["data"]["character_images"] if v["content_type"] == "image/svg+xml"), "")
+            svgcode = fetchAndParseUrl(url, {}, lambda p: p.text, bearer)
+            radical["data"]["svgcode"] = svgcode
 
     print("Found subjects in page: {subjpage}".format(subjpage=len(subjects)))
 

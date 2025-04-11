@@ -97,8 +97,7 @@ def createMissingRadicals(col, radicals, existing_characters, kanjis):
         if subjchars is not None and len(subjchars) > 0:
             note["Image"] = subjchars
         else:
-            url = next((v["url"] for v in subj["data"]["character_images"] if v["content_type"] == "image/svg+xml"), "")
-            svgcode = wksync.fetchAndParseUrl(url, {}, lambda p: p.text)
+            svgcode = subj["data"]["svgcode"]
             doc = pq(svgcode)
             svg = doc[0]
             svg.attrib["width"] = "80px"

@@ -1,8 +1,11 @@
 import ankilib, wksync
+import yaml
+
+config = yaml.safe_load(open("config.yaml"))
 
 def syncNilay():
-    col = ankilib.open_collection("Nilay")
-    subjects = wksync.fetchSubjects("kanji,radical,vocabulary")
+    col = ankilib.open_collection(config['profileNameNilay'])
+    subjects = wksync.fetchSubjects("kanji,radical,vocabulary", config['waniKaniKeyNilay'])
     kanjis = [v for v in subjects if v["type"] == "kanji"]
     radicals = [v for v in subjects if v["type"] == "radical"]
     vocab = [v for v in subjects if v["type"] == "vocabulary"]
@@ -23,9 +26,9 @@ def syncNilay():
 
 
 def syncFlo():
-    col = ankilib.open_collection("Flo")
+    col = ankilib.open_collection(config['profileNameFlo'])
 
-    subjects = wksync.fetchSubjects("kanji,radical")
+    subjects = wksync.fetchSubjects("kanji,radical", config['waniKaniKeyFlo'])
     kanjis = [v for v in subjects if v["type"] == "kanji"]
     radicals = [v for v in subjects if v["type"] == "radical"]
 
