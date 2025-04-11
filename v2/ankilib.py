@@ -1,7 +1,6 @@
 from anki.collection import Collection
 from pathlib import Path
 from pyquery import PyQuery as pq
-import wksync
 from anki.collection import Collection
 from datetime import timedelta, date
 import itertools

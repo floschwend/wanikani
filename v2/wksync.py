@@ -1,6 +1,4 @@
-from anki.collection import Collection
 import jmespath
-from pathlib import Path
 import requests
 import yaml
 
