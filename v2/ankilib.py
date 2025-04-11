@@ -113,23 +113,26 @@ def createMissingVocab(col, vocab, existing_vocab, kanjis):
 
     for subj in vocab:
 
+        wkid = str(subj["id"])
         word = subj["data"]["characters"]
 
         note = None
-        if word in existing_vocab:
-            exnotesids = col.find_notes("Deck:Kanji Word:{word}".format(word=word))
+        if wkid in existing_vocab:
+            exnotesids = col.find_notes("Deck:Vocab WKID:{wkid}".format(wkid=wkid))
             if(len(exnotesids) != 1):
-                raise Exception("More than one note to update found: {word}".format(word = word))
+                raise Exception("More than one note to update found: {wkid}".format(wkid = wkid))
             note = col.get_note(exnotesids[0])
             # print("Updating Vocab: {word}".format(word = word))
         else:
             note = col.new_note(note_type)
-            note["Word"] = word
+            note["WKID"] = wkid
             col.add_note(note, did)
             print("Adding new Vocab: {word}".format(word = word))
 
+        note["Word"] = word
 
-        used_kanji = [v["data"]["slug"] for v in kanjis if v["id"] in subj["data"]["component_subject_ids"]]
+        used_kanji = ["{char} ({desc})".format(char=v["data"]["slug"], desc=getPrimaryMeaning(v)) 
+                      for v in kanjis if v["id"] in subj["data"]["component_subject_ids"]]
         note["UsedKanji"] = ", ".join(used_kanji)
         
         note["Meaning"] = getPrimaryMeaning(subj)

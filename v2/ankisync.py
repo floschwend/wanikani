@@ -19,7 +19,7 @@ def syncNilay():
     ankilib.createMissingRadicals(col, radicals, existing_radicalnames, kanjis)
 
     vocab_note_ids = col.find_notes("Deck:Vocab note:VocabWithKanji")
-    existing_vocab = [ankilib.getNoteInfo(col, v, "Word") for v in vocab_note_ids]
+    existing_vocab = [ankilib.getNoteInfo(col, v, "WKID") for v in vocab_note_ids]
     ankilib.createMissingVocab(col, vocab, existing_vocab, kanjis) 
 
     col.close()
