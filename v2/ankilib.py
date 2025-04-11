@@ -203,3 +203,8 @@ def update_duedates(col, card_ids):
         update_cards(col, group)
     
     return numdupl
+
+def getNoteInfo(col, note_id, key):
+
+    note = col.get_note(note_id)
+    return note[key]

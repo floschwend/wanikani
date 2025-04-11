@@ -11,7 +11,7 @@ def fetchAndParseUrl(url, params, return_method):
 
     print("Fetching: {url} with params {params}".format(url= url, params = params))
     
-    headers = {"Wanikani-Revision": "20170710", "Authorization": "Bearer {key}".format(key= config['waniKaniKey'])}
+    headers = {"Wanikani-Revision": "20170710", "Authorization": "Bearer {key}".format(key= config['waniKaniKeyUser2'])}
 
     try:
         resp = requests.get(url=url, params=params, headers=headers)
