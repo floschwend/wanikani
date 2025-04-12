@@ -1,17 +1,21 @@
 from anki.collection import Collection
 from pathlib import Path
 from pyquery import PyQuery as pq
-from anki.collection import Collection
 from datetime import timedelta, date
 import itertools
 from collections import namedtuple
-from pathlib import Path
+from anki.sync import SyncAuth 
 
 colpath = "{userhome}\\AppData\\Roaming\\Anki2\\{profile}\\collection.anki2"
 GroupKey = namedtuple("GroupKey", ["note_id", "due_date"])
 
 class CardInfo(object):
     pass
+
+def perform_sync(col: Collection, hkey):
+    # auth = col.sync_login("email", "pw", None)
+    result = col.sync_collection(SyncAuth(hkey=hkey), True)
+    print("Sync: {result}".format(result=result))
 
 def open_collection(profile):
     col = Collection(colpath.format(userhome = Path.home(), profile = profile))

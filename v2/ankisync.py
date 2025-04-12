@@ -5,6 +5,8 @@ config = yaml.safe_load(open("config.yaml"))
 
 def syncNilay():
     col = ankilib.open_collection(config['profileNameNilay'])
+    ankilib.perform_sync(col, config['ankiSyncAuthNilay'])
+
     subjects = wksync.fetchSubjects("kanji,radical,vocabulary", config['waniKaniKeyNilay'])
     kanjis = [v for v in subjects if v["type"] == "kanji"]
     radicals = [v for v in subjects if v["type"] == "radical"]
@@ -23,12 +25,14 @@ def syncNilay():
     ankilib.createMissingVocab(col, vocab, existing_vocab, kanjis) 
 
     # TODO: ankilib.fix_duedates(col)
+    ankilib.perform_sync(col, config['ankiSyncAuthNilay'])
 
     col.close()
 
 
 def syncFlo():
     col = ankilib.open_collection(config['profileNameFlo'])
+    ankilib.perform_sync(col, config['ankiSyncAuthFlo'])
 
     subjects = wksync.fetchSubjects("kanji,radical", config['waniKaniKeyFlo'])
     kanjis = [v for v in subjects if v["type"] == "kanji"]
@@ -44,9 +48,11 @@ def syncFlo():
 
     ankilib.fix_duedates(col)
 
+    ankilib.perform_sync(col, config['ankiSyncAuthFlo'])
+
     col.close()
 
 
 # Sync Flo
 syncNilay()
-syncFlo()
+# syncFlo()
