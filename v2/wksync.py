@@ -1,9 +1,5 @@
 import jmespath
 import requests
-import yaml
-
-
-config = yaml.safe_load(open("config.yaml"))
 
 def fetchAndParseUrl(url, params, return_method, bearer):
 
