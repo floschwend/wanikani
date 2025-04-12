@@ -3,7 +3,7 @@ import requests
 
 def fetchAndParseUrl(url, params, return_method, bearer):
 
-    print("Fetching: {url} with params {params}".format(url= url, params = params))
+    # print("Fetching: {url} with params {params}".format(url= url, params = params))
     
     headers = {"Wanikani-Revision": "20170710", "Authorization": "Bearer {key}".format(key= bearer)}
 
@@ -21,7 +21,7 @@ def fetchAssignmentsPage(url, params, bearer):
 
     assignments = jmespath.search('data[*].data', data)
 
-    print("Found assignments in page: {number}".format(number= len(assignments)))
+    # print("Found assignments in page: {number}".format(number= len(assignments)))
 
     next = data["pages"]["next_url"]
     if next is not None:
@@ -54,7 +54,7 @@ def fetchSubjectsDetails(ids, bearer):
         subjdata = fetchSubjectsDetailsPage(subids, bearer)
         subjects = subjects + subjdata
 
-    print("Found total subjects: {subjtotal}".format(subjtotal = len(subjects)))
+    # print("Found total subjects: {subjtotal}".format(subjtotal = len(subjects)))
 
     return subjects
 
@@ -75,7 +75,7 @@ def fetchSubjectsDetailsPage(ids, bearer):
             svgcode = fetchAndParseUrl(url, {}, lambda p: p.text, bearer)
             radical["data"]["svgcode"] = svgcode
 
-    print("Found subjects in page: {subjpage}".format(subjpage=len(subjects)))
+    # print("Found subjects in page: {subjpage}".format(subjpage=len(subjects)))
 
     return subjects
 

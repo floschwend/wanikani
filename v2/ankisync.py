@@ -5,6 +5,8 @@ config = yaml.safe_load(open("config.yaml"))
 
 def sync_profile(name, wkkey, ankikey, syncvocab: bool):
 
+    print("=== Starting sync [{name}] ===".format(name=name))
+
     col = ankilib.open_collection(name)
     ankilib.perform_sync(col, ankikey)
 
@@ -32,6 +34,8 @@ def sync_profile(name, wkkey, ankikey, syncvocab: bool):
     ankilib.perform_sync(col, ankikey)
 
     col.close()
+
+    print("=== Finished sync [{name}] ===".format(name=name))
 
     return
 
