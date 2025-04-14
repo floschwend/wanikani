@@ -160,6 +160,8 @@ def get_card_info(col, card_id):
     info.note_id = card.note().id
     if(any(f["name"] == "English" for f in card.note_type()["flds"])):
         info.english = card.note()["English"]
+    elif(any(f["name"] == "Meaning" for f in card.note_type()["flds"])):
+        info.english = card.note()["Meaning"]
     info.ivl = card.ivl
     info.type = card.note_type()["tmpls"][card.ord]["name"]
     info.ord = card.ord
