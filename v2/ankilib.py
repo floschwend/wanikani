@@ -5,6 +5,7 @@ from datetime import timedelta, date
 import itertools
 from collections import namedtuple
 from anki.sync import SyncAuth 
+from threading import Thread
 
 colpath = "{userhome}\\AppData\\Roaming\\Anki2\\{profile}\\collection.anki2"
 GroupKey = namedtuple("GroupKey", ["note_id", "due_date"])
@@ -12,11 +13,15 @@ GroupKey = namedtuple("GroupKey", ["note_id", "due_date"])
 class CardInfo(object):
     pass
 
+def perform_sync_thread(col: Collection, hkey):
+    result = col.sync_collection(SyncAuth(hkey=hkey), True)
+    print(result)
+
 def perform_sync(col: Collection, hkey):
     # auth = col.sync_login("email", "pw", None)
-    result = col.sync_collection(SyncAuth(hkey=hkey), True)
-    
-    print("Sync: {result}".format(result=result))
+    t = Thread(target = perform_sync_thread, args = (col, hkey))
+    t.start()
+    t.join()
 
 def open_collection(profile):
     col = Collection(colpath.format(userhome = Path.home(), profile = profile))
