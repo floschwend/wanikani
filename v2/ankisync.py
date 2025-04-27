@@ -9,6 +9,7 @@ def sync_profile(name, wkkey, ankikey, syncvocab: bool):
 
     col = ankilib.open_collection(name)
     ankilib.perform_sync(col, ankikey)
+    ankilib.create_backup(col)
 
     subjects = wksync.fetchSubjects("kanji,radical", wkkey)
     kanjis = [v for v in subjects if v["type"] == "kanji"]

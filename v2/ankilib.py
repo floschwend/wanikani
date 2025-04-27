@@ -6,6 +6,7 @@ import itertools
 from collections import namedtuple
 from anki.sync import SyncAuth 
 from threading import Thread
+import os
 
 colpath = "{userhome}\\AppData\\Roaming\\Anki2\\{profile}\\collection.anki2"
 GroupKey = namedtuple("GroupKey", ["note_id", "due_date"])
@@ -22,6 +23,11 @@ def perform_sync(col: Collection, hkey):
     t = Thread(target = perform_sync_thread, args = (col, hkey))
     t.start()
     t.join()
+
+def create_backup(col: Collection):
+    col_folder = os.path.dirname(col.path)
+    backup_folder = os.path.join(col_folder, "backups")
+    col.create_backup(backup_folder=backup_folder, force=False, wait_for_completion=True)
 
 def open_collection(profile):
     col = Collection(colpath.format(userhome = Path.home(), profile = profile))

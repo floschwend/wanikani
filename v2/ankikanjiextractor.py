@@ -54,3 +54,5 @@ for subject in subjects:
 # Onyomi
 print_readings("onyomi")
 print_readings("kunyomi")
+
+print (",".join([v["data"]["slug"] for v in subjects]))
