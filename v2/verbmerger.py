@@ -8,23 +8,55 @@ profile = next((v["profileName"] for v in config["Profiles"] if v["profileName"]
 
 col = ankilib.open_collection(profile)
 
-# Open setdeck vocabulary
-# vocab_note_ids = col.find_notes("Deck:Vocab note:VocabWithKanji")
-
 def merge_verbs(col):
     find_polite = "deck:Vocab tag:verb (English:he* OR English:she* OR English:it*)"
-    notes_verb_dict_ids = col.find_notes("deck:Vocab tag:verb (English:to*)")
+    notes_verb_dict_ids = col.find_notes("deck:Vocab tag:verb English:to* Kanji:_*")
 
     # Loop the dict ones
     for dict_note_id in notes_verb_dict_ids:
 
         dict_note = col.get_note(dict_note_id)
 
-        # Find the polite match
-        # Build potential polite matches group 1
-        
+        # Build potential polite matches group 1 (u, tsu, ru, bu, mu, nu, ku, gu, su) + 2 (ru)
+        ext_list = [('う','います'), ('つ','ちます'), ('る','ります'), ('ぶ','びます'), ('む','みます'), ('ぬ','にます'), ('く','きます'), ('ぐ','ぎます'), ('す','します'), ('る','ます')]
 
+        # Build combinations
+        matching_endings = [e for e in ext_list if dict_note["Kanji"].endswith(e[0])]
+        potential_polite = [dict_note["Kanji"][:len(dict_note["Kanji"])-1] + e[1] for e in matching_endings]
+        #print(dict_note["Kanji"])
+        #print(potential_polite)
 
+        # Find the polite matches
+        searches = find_polite + " (" + " OR ".join(["Kanji:{kanji}".format(kanji=p) for p in potential_polite]) + ")"
+        results = col.find_notes(searches)
+
+        # We only process if we have exactly 1 result
+        if(len(results) == 1):
+            
+            # Get the polite note
+            polite_note = col.get_note(results[0])
+            #print(polite_note["Kanji"])
+
+            # Get the cards
+            for card_type in [c.ord for c in dict_note.cards()]:
+                polite_cards = [c for c in polite_note.cards() if c.ord == card_type]
+                dict_cards = [c for c in dict_note.cards() if c.ord == card_type]
+
+                if(len(polite_cards) > 1 or len(dict_cards) > 1):
+                    raise ValueError("Multiple cards founds")
+                
+                if(len(polite_cards) == 0):
+                    raise ValueError("No matching card found for notes: {nid1}, {nid2}".format(nid1=polite_note.id, nid2=dict_note.id))
+
+                polite_card = polite_cards[0]
+                dict_card = dict_cards[0]
+
+                print("Polite: {poldue}, Dict: {dictdue} => result: {due}".format(poldue=polite_card.due, dictdue=dict_card.due, due=min([polite_card.due, dict_card.due])))
+
+        else:
+            print("Won't process: {searches} => {results}".format(searches=searches, results=results))
+        #break
+            
 def fix_tags(col):
     notes_with_tags = col.find_notes("tag:_* tag:*,*")
     for note_id in notes_with_tags:
@@ -44,3 +76,5 @@ def fix_tags(col):
 
         print("{key}".format(key=note.tags))
         col.update_note(note)
+
+merge_verbs(col)
