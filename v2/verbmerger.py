@@ -10,7 +10,7 @@ col = ankilib.open_collection(profile)
 
 def merge_verbs(col):
     find_polite = "deck:Vocab tag:verb (English:he* OR English:she* OR English:it*)"
-    notes_verb_dict_ids = col.find_notes("deck:Vocab tag:verb English:to* Kanji:_*")
+    notes_verb_dict_ids = col.find_notes("deck:Vocab tag:verb English:to* Kanji:_* -Kanji:*<br>*")
 
     # Loop the dict ones
     processed = 0
@@ -63,8 +63,8 @@ def merge_verbs(col):
 
             # Update dict note
             # We keep the English text of dict_card, but we need to update the reading + kanji
-            dict_note["Kanji"] = "{dict} / {polite}".format(dict=dict_note["Kanji"], polite=polite_note["Kanji"])
-            dict_note["Kana"] = "{dict} / {polite}".format(dict=dict_note["Kana"], polite=polite_note["Kana"])
+            dict_note["Kanji"] = "{dict}<br>{polite}".format(dict=dict_note["Kanji"], polite=polite_note["Kanji"])
+            dict_note["Kana"] = "{dict}<br>{polite}".format(dict=dict_note["Kana"], polite=polite_note["Kana"])
 
             # Tag old note
             polite_note.add_tag("DEPRECATED")
@@ -79,7 +79,7 @@ def merge_verbs(col):
             col.update_note(dict_note)
             col.update_note(polite_note)
 
-            break
+            #break
 
         else:
             print("Won't process: {searches} => {results}".format(searches=searches, results=results))
