@@ -13,6 +13,7 @@ def merge_verbs(col):
     notes_verb_dict_ids = col.find_notes("deck:Vocab tag:verb English:to* Kanji:_*")
 
     # Loop the dict ones
+    processed = 0
     for dict_note_id in notes_verb_dict_ids:
 
         dict_note = col.get_note(dict_note_id)
@@ -51,11 +52,39 @@ def merge_verbs(col):
                 polite_card = polite_cards[0]
                 dict_card = dict_cards[0]
 
+                # User lower due date on dict_card
+                lower_due = due=min([polite_card.due, dict_card.due])
+                dict_card.due = lower_due
+
+                col.update_card(dict_card)
+
                 print("Polite: {poldue}, Dict: {dictdue} => result: {due}".format(poldue=polite_card.due, dictdue=dict_card.due, due=min([polite_card.due, dict_card.due])))
+
+
+            # Update dict note
+            # We keep the English text of dict_card, but we need to update the reading + kanji
+            dict_note["Kanji"] = "{dict} / {polite}".format(dict=dict_note["Kanji"], polite=polite_note["Kanji"])
+            dict_note["Kana"] = "{dict} / {polite}".format(dict=dict_note["Kana"], polite=polite_note["Kana"])
+
+            # Tag old note
+            polite_note.add_tag("DEPRECATED")
+
+            print(dict_note["English"])
+            print(dict_note["Kanji"])
+            print(dict_note["Kana"])
+            processed += 1
+
+            print("nid:{id1} OR nid:{id2}".format(id1=polite_note.id, id2=dict_note.id))
+
+            col.update_note(dict_note)
+            col.update_note(polite_note)
+
+            break
 
         else:
             print("Won't process: {searches} => {results}".format(searches=searches, results=results))
-        #break
+        
+        print(processed)
             
 def fix_tags(col):
     notes_with_tags = col.find_notes("tag:_* tag:*,*")
