@@ -139,6 +139,9 @@ def createMissingVocab(col, vocab, existing_vocab, kanjis):
             if(len(exnotesids) != 1):
                 raise Exception("More than one note to update found: {wkid}".format(wkid = wkid))
             note = col.get_note(exnotesids[0])
+            wordtypes = ", ".join([v for v in subj["data"]["parts_of_speech"]])
+            note["Notes-Backside"] = wordtypes
+
             # print("Updating Vocab: {word}".format(word = word))
         else:
             note = col.new_note(note_type)
