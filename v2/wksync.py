@@ -31,10 +31,10 @@ def fetchAssignmentsPage(url, params, bearer):
 
     return assignments
 
-def fetchSubjects(types, bearer, syncVocabAfter: datetime.date = None):
+def fetchSubjects(types, bearer, lastSync: datetime.date, syncVocabAfter: datetime.date = None):
 
     url = "https://api.wanikani.com/v2/assignments"
-    params = {"srs_stages": ','.join(str(i) for i in range(1,10)), "subject_types":types}
+    params = {"srs_stages": ','.join(str(i) for i in range(1,10)), "subject_types":types, "updated_after":lastSync.isoformat()}
 
     assignments = fetchAssignmentsPage(url, params, bearer)
 
