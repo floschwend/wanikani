@@ -1,9 +1,10 @@
 import ankilib, wksync
 import yaml
+import datetime
 
 config = yaml.safe_load(open("config.yaml"))
 
-def sync_profile(name, wkkey, ankikey, syncvocab: bool):
+def sync_profile(name, wkkey, ankikey, syncVocab: bool, syncVocabAfter: datetime.date = None, syncVocabConjugateVerbs: bool = False):
 
     print("=== Starting sync [{name}] ===".format(name=name))
 
@@ -23,13 +24,13 @@ def sync_profile(name, wkkey, ankikey, syncvocab: bool):
     existing_radicalnames = [ankilib.getNoteInfo(col, v, "Name") for v in radical_note_ids]
     ankilib.createMissingRadicals(col, radicals, existing_radicalnames, kanjis)
 
-    if(syncvocab):
-        subjects = wksync.fetchSubjects("vocabulary", wkkey)
+    if(syncVocab):
+        subjects = wksync.fetchSubjects("vocabulary", wkkey, syncVocabAfter)
         vocab = [v for v in subjects if v["type"] == "vocabulary"]
 
         vocab_note_ids = col.find_notes("Deck:Vocab note:VocabWithKanji")
         existing_vocab = [ankilib.getNoteInfo(col, v, "WKID") for v in vocab_note_ids]
-        ankilib.createMissingVocab(col, vocab, existing_vocab, kanjis) 
+        ankilib.createMissingVocab(col, vocab, existing_vocab, kanjis, syncVocabConjugateVerbs) 
 
     ankilib.fix_duedates(col)
     ankilib.perform_sync(col, ankikey)
@@ -43,4 +44,5 @@ def sync_profile(name, wkkey, ankikey, syncvocab: bool):
 
 # Perform action
 for syncUser in config["Profiles"]:
-    sync_profile(syncUser["profileName"], syncUser["waniKaniKey"], syncUser["ankiSyncAuth"], syncUser["syncVocab"])
+    sync_profile(syncUser["profileName"], syncUser["waniKaniKey"], syncUser["ankiSyncAuth"], syncUser["syncVocab"],
+                  syncUser.get("syncVocabAfter", None), syncUser.get("syncVocabConjugateVerbs", False))

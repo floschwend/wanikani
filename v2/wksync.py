@@ -1,5 +1,6 @@
 import jmespath
 import requests
+import datetime
 
 def fetchAndParseUrl(url, params, return_method, bearer):
 
@@ -30,14 +31,22 @@ def fetchAssignmentsPage(url, params, bearer):
 
     return assignments
 
-def fetchSubjects(types, bearer):
+def fetchSubjects(types, bearer, syncVocabAfter: datetime.date = None):
 
     url = "https://api.wanikani.com/v2/assignments"
     params = {"srs_stages": ','.join(str(i) for i in range(1,10)), "subject_types":types}
 
     assignments = fetchAssignmentsPage(url, params, bearer)
 
-    subjectIds = jmespath.search("[*].subject_id", assignments)
+    subjectIds = None
+    if syncVocabAfter is None:
+        subjectIds = jmespath.search("[*].subject_id", assignments)
+    else:
+        subjectIds = jmespath.search("[?started_at >= `{}`].subject_id".format(syncVocabAfter), assignments)
+
+    if len(subjectIds) == 0:
+        return []
+    
     subjects = fetchSubjectsDetails(subjectIds, bearer)
 
     return subjects

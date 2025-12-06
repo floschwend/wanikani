@@ -123,7 +123,7 @@ def createMissingRadicals(col, radicals, existing_characters, kanjis):
 
         col.update_note(note)
 
-def createMissingVocab(col, vocab, existing_vocab, kanjis):
+def createMissingVocab(col, vocab, existing_vocab, kanjis, syncVocabConjugateVerbs: bool):
 
     note_type = col.models.by_name("VocabWithKanji")
     did = col.decks.id("Vocab")
