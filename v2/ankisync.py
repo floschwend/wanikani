@@ -21,8 +21,8 @@ def sync_profile(name, wkkey, ankikey, syncVocabAfter: datetime.date = None, syn
     max_vocab_nid =  max(nid for nid in vocab_note_ids)
     last_sync = datetime.fromtimestamp(max_vocab_nid / 1000.0) - timedelta(days=10)
 
-    # Get Kanjis + Radicals from WK
-    subjects = wksync.fetchSubjects("kanji,radical", wkkey, last_sync)
+    # Get Kanjis + Radicals from WK (get all)
+    subjects = wksync.fetchSubjects("kanji,radical", wkkey)
     kanjis = [v for v in subjects if v["type"] == "kanji"]
     radicals = [v for v in subjects if v["type"] == "radical"]
     
@@ -34,7 +34,7 @@ def sync_profile(name, wkkey, ankikey, syncVocabAfter: datetime.date = None, syn
     existing_radicalnames = [ankilib.getNoteInfo(col, v, "Name") for v in radical_note_ids]
     ankilib.createMissingRadicals(col, radicals, existing_radicalnames, kanjis)
 
-    # Get Vocab from WK
+    # Get Vocab from WK (only recent ones)
     subjects = wksync.fetchSubjects("vocabulary", wkkey, last_sync, syncVocabAfter)
     vocab = [v for v in subjects if v["type"] == "vocabulary"]
 
