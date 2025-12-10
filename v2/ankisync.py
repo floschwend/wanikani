@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 config = yaml.safe_load(open("config.yaml"))
 
-def sync_profile(name, wkkey, ankikey, syncVocabAfter: datetime.date = None, syncVocabConjugateVerbs: bool = False):
+def sync_profile(name, wkkey, ankikey, syncVocabAfter: datetime.date = None, syncVocabConjugateVerbs: bool = False, syncVocabLowerCase: bool = False):
 
     print("=== Starting sync [{name}] ===".format(name=name))
 
@@ -40,7 +40,7 @@ def sync_profile(name, wkkey, ankikey, syncVocabAfter: datetime.date = None, syn
 
     # Update Vocab in Anki
     existing_vocab = [ankilib.getNoteInfo(col, v, "WKID") for v in vocab_note_ids]
-    ankilib.createMissingVocab(col, vocab, existing_vocab, kanjis, syncVocabConjugateVerbs) 
+    ankilib.createMissingVocab(col, vocab, existing_vocab, kanjis, syncVocabConjugateVerbs, syncVocabLowerCase) 
 
     # Fix due dates + sync
     ankilib.fix_duedates(col)
@@ -56,4 +56,4 @@ def sync_profile(name, wkkey, ankikey, syncVocabAfter: datetime.date = None, syn
 # Perform action
 for syncUser in config["Profiles"]:
     sync_profile(syncUser["profileName"], syncUser["waniKaniKey"], syncUser["ankiSyncAuth"], 
-                  syncUser.get("syncVocabAfter", None), syncUser.get("syncVocabConjugateVerbs", False))
+                  syncUser.get("syncVocabAfter", None), syncUser.get("syncVocabConjugateVerbs", False), syncUser.get("syncVocabLowerCase", False))

@@ -123,7 +123,7 @@ def createMissingRadicals(col, radicals, existing_characters, kanjis):
 
         col.update_note(note)
 
-def createMissingVocab(col, vocab, existing_vocab, kanjis, syncVocabConjugateVerbs: bool):
+def createMissingVocab(col, vocab, existing_vocab, kanjis, syncVocabConjugateVerbs: bool, syncVocabLowerCase: bool):
 
     note_type = col.models.by_name("VocabWithKanji")
     did = col.decks.id("Vocab")
@@ -151,16 +151,25 @@ def createMissingVocab(col, vocab, existing_vocab, kanjis, syncVocabConjugateVer
         used_kanji = ["{char} ({desc})".format(char=v["data"]["slug"], desc=getPrimaryMeaning(v)) 
                       for v in kanjis if v["id"] in subj["data"]["component_subject_ids"]]
         note["UsedKanji"] = ", ".join(used_kanji)
+
+        keepOriginalVocabCase = False
+        if syncVocabLowerCase:
+            keepOriginalVocabCase = any(v for v in subj["data"]["parts_of_speech"] if v == "proper noun")
         
-        note["Meaning"] = getPrimaryMeaning(subj)
+        note["Meaning"] = fix_meaning(getPrimaryMeaning(subj), keepOriginalVocabCase)
         note["Reading"] = next((v["reading"] for v in subj["data"]["readings"] if v["primary"] == True), "")
-        note["OtherMeanings"] = ", ".join([v["meaning"] for v in subj["data"]["meanings"] if v["primary"] == False])
+        note["OtherMeanings"] = ", ".join([fix_meaning(v["meaning"], keepOriginalVocabCase) for v in subj["data"]["meanings"] if v["primary"] == False])
         note["OtherReadings"] = ", ".join([v["reading"] for v in subj["data"]["readings"] if v["primary"] == False])
 
         wordtypes = ", ".join([v for v in subj["data"]["parts_of_speech"]])
         note["Notes-Backside"] = wordtypes
         
         col.update_note(note)
+
+def fix_meaning(meaning: str, keepOriginalVocabCase: bool):
+    if keepOriginalVocabCase:
+        return meaning
+    return meaning.lower()
 
 def get_card_info(col, card_id):
     card = col.get_card(card_id)
