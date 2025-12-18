@@ -70,8 +70,8 @@ def createMissingKanji(col, kanjis, existing_characters, radicals):
         note["ReadingType"] = next((v["type"] for v in subj["data"]["readings"] if v["primary"] == True), "")
         note["ReadingMnemonic"] = subj["data"]["reading_mnemonic"] or ""
         note["ReadingHint"] = subj["data"]["reading_hint"] or ""
-        note["OtherMeanings"] = ", ".join([v["meaning"] for v in subj["data"]["meanings"] if v["primary"] == False])
-        note["OtherReadings"] = ", ".join([v["reading"] for v in subj["data"]["readings"] if v["primary"] == False and v["type"] == "onyomi"])
+        note["OtherMeanings"] = ", ".join([v["meaning"] for v in subj["data"]["meanings"] if v["primary"] == False and v["accepted_answer"] == True])
+        note["OtherReadings"] = ", ".join([v["reading"] for v in subj["data"]["readings"] if v["primary"] == False and v["accepted_answer"] == True])
         
         
         similar = ["{k}: {d}".format(k=v["data"]["slug"], d=getPrimaryMeaning(v)) for v in kanjis if v["id"] in subj["data"]["visually_similar_subject_ids"]]
