@@ -72,7 +72,7 @@ def createMissingKanji(col, kanjis, existing_characters, radicals):
         note["ReadingHint"] = subj["data"]["reading_hint"] or ""
         note["OtherMeanings"] = ", ".join([v["meaning"] for v in subj["data"]["meanings"] if v["primary"] == False and v["accepted_answer"] == True])
         note["OtherReadings"] = ", ".join([v["reading"] for v in subj["data"]["readings"] if v["primary"] == False and v["accepted_answer"] == True])
-        
+        note["URL"] = subj["data"]["document_url"]
         
         similar = ["{k}: {d}".format(k=v["data"]["slug"], d=getPrimaryMeaning(v)) for v in kanjis if v["id"] in subj["data"]["visually_similar_subject_ids"]]
         note["SimilarKanjis"] = ", ".join(similar)
@@ -105,6 +105,7 @@ def createMissingRadicals(col, radicals, existing_characters, kanjis):
 
         note["Meaning"] = getPrimaryMeaning(subj)
         note["MeaningMnemonic"] = subj["data"]["meaning_mnemonic"] or ""
+        note["URL"] = subj["data"]["document_url"]
         
         usingkanjis = ["{k}: {d}".format(k=v["data"]["slug"], d=getPrimaryMeaning(v)) for v in kanjis if v["id"] in subj["data"]["amalgamation_subject_ids"]]
         note["Kanjis"] = ", ".join(usingkanjis)
@@ -160,6 +161,7 @@ def createMissingVocab(col, vocab, existing_vocab, kanjis, syncVocabConjugateVer
         note["Reading"] = next((v["reading"] for v in subj["data"]["readings"] if v["primary"] == True), "")
         note["OtherMeanings"] = ", ".join([fix_meaning(v["meaning"], keepOriginalVocabCase) for v in subj["data"]["meanings"] if v["primary"] == False])
         note["OtherReadings"] = ", ".join([v["reading"] for v in subj["data"]["readings"] if v["primary"] == False])
+        note["URL"] = subj["data"]["document_url"]
 
         wordtypes = ", ".join([v for v in subj["data"]["parts_of_speech"]])
         note["Notes-Backside"] = wordtypes
