@@ -124,7 +124,7 @@ def createMissingRadicals(col, radicals, existing_characters, kanjis):
 
         col.update_note(note)
 
-def createMissingVocab(col, vocab, existing_vocab, kanjis, syncVocabConjugateVerbs: bool, syncVocabLowerCase: bool):
+def createMissingVocab(col, vocab, existing_vocab_wkids, kanjis, syncVocabLowerCase: bool):
 
     note_type = col.models.by_name("VocabWithKanji")
     did = col.decks.id("Vocab")
@@ -135,7 +135,7 @@ def createMissingVocab(col, vocab, existing_vocab, kanjis, syncVocabConjugateVer
         word = subj["data"]["characters"]
 
         note = None
-        if wkid in existing_vocab:
+        if wkid in existing_vocab_wkids:
             exnotesids = col.find_notes("Deck:Vocab WKID:{wkid}".format(wkid=wkid))
             if(len(exnotesids) != 1):
                 raise Exception("More than one note to update found: {wkid}".format(wkid = wkid))
@@ -167,6 +167,31 @@ def createMissingVocab(col, vocab, existing_vocab, kanjis, syncVocabConjugateVer
         note["Notes-Backside"] = wordtypes
         
         col.update_note(note)
+
+def update_vocab_by_word_set_wkid(col, vocab, kanjis, syncVocabLowerCase: bool):
+
+    # Store for next method
+    existing_vocab_wkids = []
+
+    # Find vocab by word value, set WK-ID
+    for subj in vocab:
+        wkid = str(subj["id"])
+        vocabword = subj["data"]["characters"]
+
+        note_ids = col.find_notes("Deck:Vocab note:VocabWithKanji Word:{vocabword}".format(vocabword=vocabword))
+        if len(note_ids) > 1:
+            raise Exception("More than one note to set WKID found: {vocabword}".format(vocabword = vocabword))
+        note = col.get_note(note_ids[0])
+
+        note["WKID"] = wkid
+        col.update_note(note)
+
+        existing_vocab_wkids.append(wkid)
+
+    # Run proper update
+    createMissingVocab(col, vocab, existing_vocab_wkids, kanjis, syncVocabLowerCase)
+
+    return
 
 def fix_meaning(meaning: str, keepOriginalVocabCase: bool):
     if keepOriginalVocabCase:

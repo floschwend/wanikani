@@ -31,7 +31,7 @@ def fetchAssignmentsPage(url, params, bearer):
 
     return assignments
 
-def fetchSubjects(types, bearer, lastSync: datetime.date = None, syncVocabAfter: datetime.date = None):
+def fetchSubjectsBySRS(types, bearer, lastSync: datetime.date = None, syncVocabAfter: datetime.date = None):
 
     url = "https://api.wanikani.com/v2/assignments"
     params = {"srs_stages": ','.join(str(i) for i in range(1,10)), "subject_types":types}
@@ -50,20 +50,26 @@ def fetchSubjects(types, bearer, lastSync: datetime.date = None, syncVocabAfter:
     if len(subjectIds) == 0:
         return []
     
-    subjects = fetchSubjectsDetails(subjectIds, bearer)
+    subjects = fetchSubjectsDetailsByID(subjectIds, bearer)
 
     return subjects
 
-def fetchSubjectsDetails(ids, bearer):
+def fetchVocabBySlug(slugs: list[str], bearer):
+    return fetchSubjectsDetails("slugs", slugs, bearer, "vocabulary")
+
+def fetchSubjectsDetailsByID(ids, bearer):
+    return fetchSubjectsDetails("ids", ids, bearer)
+
+def fetchSubjectsDetails(keyName, keyValues, bearer, type: str = None):
 
     subjects = []
 
     chunkSize = 300
-    for i in range(0, len(ids), chunkSize):
+    for i in range(0, len(keyValues), chunkSize):
         inclfrom = i
-        exclto = min(i+chunkSize, len(ids))
-        subids = list(ids[inclfrom:exclto])
-        subjdata = fetchSubjectsDetailsPage(subids, bearer)
+        exclto = min(i+chunkSize, len(keyValues))
+        subkeys = list(keyValues[inclfrom:exclto])
+        subjdata = fetchSubjectsDetailsPage(keyName, subkeys, bearer, type)
         subjects = subjects + subjdata
 
     # print("Found total subjects: {subjtotal}".format(subjtotal = len(subjects)))
@@ -71,10 +77,12 @@ def fetchSubjectsDetails(ids, bearer):
     return subjects
 
 
-def fetchSubjectsDetailsPage(ids, bearer):
+def fetchSubjectsDetailsPage(keyName, keyValues, bearer, type):
 
     url = "https://api.wanikani.com/v2/subjects"
-    params = {"ids":",".join(map(str, ids))}
+    params = {keyName:",".join(map(str, keyValues))}
+    if type is not None:
+        params["types"] = type
 
     data = fetchAndParseUrl(url, params, lambda p: p.json(), bearer)
     subjects = jmespath.search('data[*].{id: id, type: object, data: data}', data)

@@ -45,7 +45,7 @@ config = yaml.safe_load(open("config.yaml"))
 
 wkkey = next((v["waniKaniKey"] for v in config["Profiles"] if v["profileName"] == "Flo"), "")
 
-subjects = wksync.fetchSubjects("kanji", wkkey)
+subjects = wksync.fetchSubjectsBySRS("kanji", wkkey)
 
 readings = []
 for subject in subjects:

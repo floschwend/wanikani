@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 config = yaml.safe_load(open("config.yaml"))
 
-def sync_profile(name, wkkey, ankikey, syncVocabAfter: datetime.date = None, syncVocabConjugateVerbs: bool = False, syncVocabLowerCase: bool = False):
+def sync_profile(name, wkkey, ankikey, syncVocabAfter: datetime.date = None, syncVocabLowerCase: bool = False, syncVocabEmptyWKID : bool = False):
 
     print("=== Starting sync [{name}] ===".format(name=name))
 
@@ -22,7 +22,7 @@ def sync_profile(name, wkkey, ankikey, syncVocabAfter: datetime.date = None, syn
     last_sync = datetime.fromtimestamp(max_vocab_nid / 1000.0) - timedelta(days=10)
 
     # Get Kanjis + Radicals from WK (get all)
-    subjects = wksync.fetchSubjects("kanji,radical", wkkey)
+    subjects = wksync.fetchSubjectsBySRS("kanji,radical", wkkey)
     kanjis = [v for v in subjects if v["type"] == "kanji"]
     radicals = [v for v in subjects if v["type"] == "radical"]
     
@@ -35,12 +35,18 @@ def sync_profile(name, wkkey, ankikey, syncVocabAfter: datetime.date = None, syn
     ankilib.createMissingRadicals(col, radicals, existing_radicalnames, kanjis)
 
     # Get Vocab from WK (only recent ones)
-    subjects = wksync.fetchSubjects("vocabulary", wkkey, last_sync, syncVocabAfter)
+    subjects = wksync.fetchSubjectsBySRS("vocabulary", wkkey, last_sync, syncVocabAfter)
     vocab = [v for v in subjects if v["type"] == "vocabulary"]
 
     # Update Vocab in Anki
     existing_vocab = [ankilib.getNoteInfo(col, v, "WKID") for v in vocab_note_ids]
-    ankilib.createMissingVocab(col, vocab, existing_vocab, kanjis, syncVocabConjugateVerbs, syncVocabLowerCase) 
+    ankilib.createMissingVocab(col, vocab, existing_vocab, kanjis, syncVocabLowerCase) 
+
+    # Convert vocab with non-numeric WKID (= vocab string) to WKID, then sync with WK
+    if syncVocabEmptyWKID:
+        fix_vocab_strings = [ankilib.getNoteInfo(col, v, "Word") for v in vocab_note_ids if len(ankilib.getNoteInfo(col, v, "WKID")) == 0]
+        fix_subjects = wksync.fetchVocabBySlug(fix_vocab_strings, wkkey)
+        ankilib.update_vocab_by_word_set_wkid(col, fix_subjects, kanjis, syncVocabLowerCase)
 
     # Fix due dates + sync
     ankilib.fix_duedates(col)
@@ -56,4 +62,5 @@ def sync_profile(name, wkkey, ankikey, syncVocabAfter: datetime.date = None, syn
 # Perform action
 for syncUser in config["Profiles"]:
     sync_profile(syncUser["profileName"], syncUser["waniKaniKey"], syncUser["ankiSyncAuth"], 
-                  syncUser.get("syncVocabAfter", None), syncUser.get("syncVocabConjugateVerbs", False), syncUser.get("syncVocabLowerCase", False))
+                  syncUser.get("syncVocabAfter", None), syncUser.get("syncVocabLowerCase", False),
+                  syncUser.get("syncVocabEmptyWKID", False))
