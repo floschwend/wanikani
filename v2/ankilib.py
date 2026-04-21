@@ -115,7 +115,7 @@ def createMissingRadicals(col, radicals, existing_characters, kanjis):
             note["Image"] = subjchars
         else:
             svgcode = subj["data"]["svgcode"]
-            doc = pq(svgcode)
+            doc = pq(svgcode.encode("utf-8"))
             svg = doc[0]
             svg.attrib["width"] = "80px"
             svg.attrib["style"] = "background-color:transparent"
